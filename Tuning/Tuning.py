@@ -37,9 +37,9 @@ from cflib.crazyflie.log import LogConfig
 from cflib.crazyflie.syncLogger import SyncLogger
 import threading
 import matplotlib.pyplot as plt
-import sys
-from PyQt5 import QtWidgets, QtCore
-
+import tkinter as tk
+import pickle
+from tkinter import ttk
 
 t_values=[]
 x_values = []
@@ -55,24 +55,24 @@ logging.basicConfig(level=logging.ERROR)
 
 
 def send_command(tab_index):
-    xkp = xkp_text.text()
-    yawkp = yawkp_text.text()
-    xkd = xkd_text.text()
-    ykp = ykp_text.text()
-    yawki = yawki_text.text()
-    yawkd = yawkd_text.text()
-    zkp = zkp_text.text()
-    ykd = ykd_text.text()
-    zkd = zkd_text.text()
-    vxkp = vxkp_text.text()
-    vyawkp = vyawkp_text.text()
-    vxkd = vxkd_text.text()
-    vykp = vykp_text.text()
-    vyawki = vyawki_text.text()
-    vyawkd = vyawkd_text.text()
-    vzkp = vzkp_text.text()
-    vykd = vykd_text.text()
-    vzkd = vzkd_text.text()
+    xkp = xkp_text.get()
+    yawkp = yawkp_text.get()
+    xkd = xkd_text.get()
+    ykp = ykp_text.get()
+    yawki = yawki_text.get()
+    yawkd = yawkd_text.get()
+    zkp = zkp_text.get()
+    ykd = ykd_text.get()
+    zkd = zkd_text.get()
+    vxkp = vxkp_text.get()
+    vyawkp = vyawkp_text.get()
+    vxkd = vxkd_text.get()
+    vykp = vykp_text.get()
+    vyawki = vyawki_text.get()
+    vyawkd = vyawkd_text.get()
+    vzkp = vzkp_text.get()
+    vykd = vykd_text.get()
+    vzkd = vzkd_text.get()
 
     try:
         agent.scf.cf.param.set_value('posCtlPid.xKp', float(xkp))
@@ -198,118 +198,83 @@ def send_command(tab_index):
     with open("Tuning.pkl", "wb") as f:
         pickle.dump((xkp, yawkp, xkd, ykp, yawki, yawkd, zkp, ykd, zkd, vxkp, vyawkp, vxkd, vykp, vyawki, vyawkd, vzkp, vykd, vzkd), f)
         
-class MyWindow(QtWidgets.QWidget):
-    def __init__(self):
-        super().__init__()
-        self.setWindowTitle("My GUI")
 
-        self.notebook = QtWidgets.QTabWidget()
-        self.tab1 = QtWidgets.QWidget()
-        self.tab2 = QtWidgets.QWidget()
+def start_gui():
+    root = tk.Tk()
+    root.title("My GUI")
+    notebook = ttk.Notebook(root)
+    tab1 = ttk.Frame(notebook)
+    tab2 = ttk.Frame(notebook)
 
-        with open("Tuning.pkl", "rb") as f:
-            value_xkp, value_yawkp, value_xkd, value_ykp, value_yawki, value_yawkd, value_zkp, value_ykd, value_zkd, value_vxkp, value_vyawkp, value_vxkd, value_vykp, value_vyawki, value_vyawkd, value_vzkp, value_vykd, value_vzkd = pickle.load(f)
+    with open("Tuning.pkl", "rb") as f:
+        value_xkp, value_yawkp, value_xkd, value_ykp, value_yawki, value_yawkd, value_zkp, value_ykd, value_zkd, value_vxkp, value_vyawkp, value_vxkd, value_vykp, value_vyawki, value_vyawkd, value_vzkp, value_vykd, value_vzkd= pickle.load(f)
+    
+    global xkp_text, yawkp_text, xkd_text, ykp_text, yawki_text, ykd_text, zkp_text,zkd_text, yawkd_text, vxkp_text, vyawkp_text, vxkd_text, vykp_text, vyawki_text, vykd_text, vzkp_text, vyawkd_text, vzkd_text 
 
-        # create the labels
-        xkp_lab = QtWidgets.QLabel("XKP:", self.tab1)
-        yawkp_lab = QtWidgets.QLabel("YAWKP:", self.tab1)
-        xkd_lab = QtWidgets.QLabel("XKD:", self.tab1)
-        ykp_lab = QtWidgets.QLabel("YKP:", self.tab1)
-        yawki_lab = QtWidgets.QLabel("YAWKI:", self.tab1)
-        yawkd_lab = QtWidgets.QLabel("YAWKD:", self.tab1)
-        zkp_lab = QtWidgets.QLabel("ZKP:", self.tab1)
-        ykd_lab = QtWidgets.QLabel("ykd:", self.tab1)
-        zkd_lab = QtWidgets.QLabel("ZKD:", self.tab1)
-        vxkp_lab = QtWidgets.QLabel("VXKP:", self.tab2)
-        vyawkp_lab = QtWidgets.QLabel("VYAWKP:", self.tab2)
-        vxkd_lab = QtWidgets.QLabel("VXKD:", self.tab2)
-        vykp_lab = QtWidgets.QLabel("VYKP:", self.tab2)
-        vyawki_lab = QtWidgets.QLabel("VYAWKI:", self.tab2)
-        vyawkd_lab = QtWidgets.QLabel("VYAWKD:", self.tab2)
-        vzkp_lab = QtWidgets.QLabel("VZKP:", self.tab2)
-        vykd_lab = QtWidgets.QLabel("Vykd:", self.tab2)
-        vzkd_lab = QtWidgets.QLabel("VZKD:", self.tab2)
+    xkp_text = tk.StringVar(value=str(value_xkp))
+    yawkp_text = tk.StringVar(value=str(value_yawkp))
+    xkd_text = tk.StringVar(value=str(value_xkd))
+    ykp_text = tk.StringVar(value=str(value_ykp))
+    yawki_text = tk.StringVar(value=str(value_yawki))
+    yawkd_text = tk.StringVar(value=str(value_yawkd))
+    zkp_text = tk.StringVar(value=str(value_zkp))
+    ykd_text = tk.StringVar(value=str(value_ykd))
+    zkd_text = tk.StringVar(value=str(value_zkd)) 
+    vxkp_text = tk.StringVar(value=str(value_vxkp))
+    vyawkp_text = tk.StringVar(value=str(value_vyawkp))
+    vxkd_text = tk.StringVar(value=str(value_vxkd))
+    vykp_text = tk.StringVar(value=str(value_vykp))
+    vyawki_text = tk.StringVar(value=str(value_vyawki))
+    vyawkd_text = tk.StringVar(value=str(value_vyawkd))
+    vzkp_text = tk.StringVar(value=str(value_vzkp))
+    vykd_text = tk.StringVar(value=str(value_vykd))
+    vzkd_text = tk.StringVar(value=str(value_vzkd)) 
+    # Labels and Entries for Tab 1
+    labels_and_vars1 = [
 
-        # create the text boxes
-        global xkp_text, yawkp_text, xkd_text, ykp_text, yawki_text, yawkd_text, zkp_text, ykd_text,zkd_text, vxkp_text, vyawkp_text, vxkd_text, vykp_text, vyawki_text, vyawkd_text, vzkp_text, vykd_text, vzkd_text    
-        xkp_text = QtWidgets.QLineEdit(str(value_xkp), self.tab1)
-        yawkp_text = QtWidgets.QLineEdit(str(value_yawkp), self.tab1)
-        xkd_text = QtWidgets.QLineEdit(str(value_xkd), self.tab1)
-        ykp_text = QtWidgets.QLineEdit(str(value_ykp), self.tab1)
-        yawki_text = QtWidgets.QLineEdit(str(value_yawki), self.tab1)
-        yawkd_text = QtWidgets.QLineEdit(str(value_yawkd), self.tab1)
-        zkp_text = QtWidgets.QLineEdit(str(value_zkp), self.tab1)
-        ykd_text = QtWidgets.QLineEdit(str(value_ykd), self.tab1)
-        zkd_text = QtWidgets.QLineEdit(str(value_zkd), self.tab1)
-        vxkp_text = QtWidgets.QLineEdit(str(value_vxkp), self.tab2)
-        vyawkp_text = QtWidgets.QLineEdit(str(value_vyawkp), self.tab2)
-        vxkd_text = QtWidgets.QLineEdit(str(value_vxkd), self.tab2)
-        vykp_text = QtWidgets.QLineEdit(str(value_vykp), self.tab2)
-        vyawki_text = QtWidgets.QLineEdit(str(value_vyawki), self.tab2)
-        vyawkd_text = QtWidgets.QLineEdit(str(value_vyawkd), self.tab2)
-        vzkp_text = QtWidgets.QLineEdit(str(value_vzkp), self.tab2)
-        vykd_text = QtWidgets.QLineEdit(str(value_vykd), self.tab2)
-        vzkd_text = QtWidgets.QLineEdit(str(value_vzkd), self.tab2)
+        (xkp_text, "XKP:", value_xkp),
+        (yawkp_text, "YAWKP:", value_yawkp),
+        (xkd_text, "XKD:", value_xkd),
+        (ykp_text, "YKP:", value_ykp),
+        (yawki_text, "YAWKI:", value_yawki),
+        (yawkd_text, "YAWKD:", value_yawkd),
+        (zkd_text, "ZKP:", value_zkp),
+        (zkp_text, "YKD:", value_ykd),
+        (ykd_text, "ZKD:", value_zkd)
+    ]
+    for i, (variable, label, value) in enumerate(labels_and_vars1):
+        tk.Label(tab1, text=label).grid(row=i // 3, column=(i%3) * 2,sticky="E")
+        tk.Entry(tab1, textvariable=variable).grid(row=i // 3, column=(i%3) *2+ 1,sticky="E")
 
 
-        # create the button
-        button1 = QtWidgets.QPushButton("Send command", self.tab1)
-        button1.clicked.connect(lambda: send_command(0))
-        button2 = QtWidgets.QPushButton("Send command", self.tab2)
-        button2.clicked.connect(lambda: send_command(1))
+    button1 = tk.Button(tab1, text="Send command", command=lambda: send_command(0))
+    button1.grid(row=3, column=2)
+    
+    # Labels and Entries for Tab 2
+    labels_and_vars2 = [
+        (vxkp_text, "VXKP:", value_vxkp),
+        (vyawkp_text, "VYAWKP:", value_vyawkp),
+        (vxkd_text, "VXKD:", value_vxkd),
+        (vykp_text, "VYKP:", value_vykp),
+        (vyawki_text, "VYAWKI:", value_vyawki),
+        (vyawkd_text,"VYAWKD:", value_vyawkd),
+        (vzkd_text, "VZKP:", value_vzkp),
+        (vzkp_text, "VYKD:", value_vykd),
+        (vykd_text, "VZKD:", value_vzkd)
+    ]
+    for i, (variable, label, value) in enumerate(labels_and_vars2):
+        tk.Label(tab2, text=label).grid(row=i // 3, column=(i % 3) * 2,sticky="E")
+        tk.Entry(tab2, textvariable=variable).grid(row=i // 3, column=(i%3)*2 + 1,sticky="E")
 
-        # position the labels and text boxes
-        grid_layout1 = QtWidgets.QGridLayout(self.tab1)
-        grid_layout1.addWidget(xkp_lab, 0, 0)
-        grid_layout1.addWidget(xkp_text, 0, 1)
-        grid_layout1.addWidget(xkd_lab, 0, 2)
-        grid_layout1.addWidget(xkd_text, 0, 3)
-        grid_layout1.addWidget(yawkp_lab, 0, 4)
-        grid_layout1.addWidget(yawkp_text, 0, 5)
-        grid_layout1.addWidget(ykp_lab, 1, 0)
-        grid_layout1.addWidget(ykp_text, 1, 1)
-        grid_layout1.addWidget(ykd_lab, 1, 2)
-        grid_layout1.addWidget(ykd_text, 1, 3)
-        grid_layout1.addWidget(yawkd_lab, 1, 4)
-        grid_layout1.addWidget(yawkd_text, 1, 5)
-        grid_layout1.addWidget(zkp_lab, 2, 0)
-        grid_layout1.addWidget(zkp_text, 2, 1)
-        grid_layout1.addWidget(zkd_lab, 2, 2)
-        grid_layout1.addWidget(zkd_text, 2, 3)
-        grid_layout1.addWidget(yawki_lab, 2, 4)
-        grid_layout1.addWidget(yawki_text, 2, 5)
-        grid_layout1.addWidget(button1, 3, 2)
+    button2 = tk.Button(tab2, text="Send command", command=lambda: send_command(1))
+    button2.grid(row=3, column=2)
+    notebook.add(tab1, text="Tab 1")
+    notebook.add(tab2, text="Tab 2")
+    notebook.pack(expand=True, fill="both")
+    root.mainloop()
+ 
 
-        # position the labels and text boxes
-        grid_layout2 = QtWidgets.QGridLayout(self.tab2)
-        grid_layout2.addWidget(vxkp_lab, 0, 0)
-        grid_layout2.addWidget(vxkp_text, 0, 1)
-        grid_layout2.addWidget(vxkd_lab, 0, 2)
-        grid_layout2.addWidget(vxkd_text, 0, 3)
-        grid_layout2.addWidget(vyawkp_lab, 0, 4)
-        grid_layout2.addWidget(vyawkp_text, 0, 5)
-        grid_layout2.addWidget(vykp_lab, 1, 0)
-        grid_layout2.addWidget(vykp_text, 1, 1)
-        grid_layout2.addWidget(vykd_lab, 1, 2)
-        grid_layout2.addWidget(vykd_text, 1, 3)
-        grid_layout2.addWidget(vyawkd_lab, 1, 4)
-        grid_layout2.addWidget(vyawkd_text, 1, 5)
-        grid_layout2.addWidget(vzkp_lab, 2, 0)
-        grid_layout2.addWidget(vzkp_text, 2, 1)
-        grid_layout2.addWidget(vzkd_lab, 2, 2)
-        grid_layout2.addWidget(vzkd_text, 2, 3)
-        grid_layout2.addWidget(vyawki_lab, 2, 4)
-        grid_layout2.addWidget(vyawki_text, 2, 5)
-        grid_layout2.addWidget(button2, 3, 2)
-
-        self.notebook.addTab(self.tab1, "Tab 1")
-        self.notebook.addTab(self.tab2, "Tab 2")
-
-        # position the button
-        vbox = QtWidgets.QVBoxLayout(self)
-        vbox.addWidget(self.notebook)
-
-def feed_pose_awesome(agent,i):
+def feed_pose_awesome(agent):
     quaternion = np.zeros(4)
     # estimated = agent.sensors.estimated_state.sense()
     measured = agent.sensors.groundtruth.sense()
@@ -321,16 +286,14 @@ def feed_pose_awesome(agent,i):
     not isnan(quaternion[2]) and \
     not isnan(quaternion[3]):
         agent.scf.cf.extpos.send_extpose(measured['x'], measured['y'], measured['z'], quaternion[0], quaternion[1], quaternion[2], quaternion[3])
+
         time_now=float(time.time())-time_start
         t_values.append(time_now)
         x_values.append(float(measured['x']))
         y_values.append(float(measured['y']))
         z_values.append(float(measured['z']))
-        
-        # plt.figure(2)
-        # plot(measured['y'])
-        # plt.figure(3)
-        # plot(measured['z'])
+
+
               
 def plot():
      # create the figure and subplots
@@ -351,7 +314,8 @@ def setup_agent(agent):
 		#     get_calib_filename(),
 		#     _lighthouse_print_status_bool=PRINT_BOOL
 		# ),
-		'groundtruth': QualisysSensor(agent, rigid_body_id="blimp2"),
+
+		'groundtruth': QualisysSensor(agent, rigid_body_id="uav31"),
 	}
 	# sensors['estimated_state'].initialize(agent)
 	agent.add_sensors(sensors)
@@ -370,12 +334,12 @@ def connection_backgroud(agent):
     time.sleep(0.1)
     agent.scf.cf.param.set_value('kalman.resetEstimation', '0')
     time.sleep(0.1)
-    time_start=float(time.time())
 
     # while True:
-    for i in range(100000):
-        feed_pose_awesome(agent,i)
+    for _ in range(100000):
+        feed_pose_awesome(agent)
         agent.scf.cf.commander.send_position_setpoint(0, 0, 1, 0)
+        
     print("hey")
     # for i in range(4000):
     #     feed_pose_awesome(agent,i)
@@ -444,15 +408,12 @@ def connection_backgroud(agent):
 
 
 if __name__ == '__main__':
-    cflib.crtp.init_drivers()
-    app = QtWidgets.QApplication(sys.argv)
-    window = MyWindow()
-    window.show()
+    cflib.crtp.init_drivers()    
     agent = CrazyflieRealAgent(uri=URI, cf_height=1, max_velocity=5, max_rate_yaw=10)
-    QtCore.QTimer.singleShot(1000, connection_backgroud(agent))
+    gui_thread = threading.Thread(target=start_gui)
+    gui_thread.start()
+    # connection_backgroud(agent)
     # bg_thread = threading.Thread(target=connection_backgroud(agent))
     # plot_thread = threading.Thread(target=plot)
     # bg_thread.start()
-    # plot_thread.start()
-    sys.exit(app.exec_())
-    
+    # plot_thread.start()()
