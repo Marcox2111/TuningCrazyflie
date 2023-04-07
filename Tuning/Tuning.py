@@ -37,6 +37,7 @@ from cflib.crazyflie.log import LogConfig
 from cflib.crazyflie.syncLogger import SyncLogger
 import threading
 import matplotlib.pyplot as plt
+import matplotlib.animation as animation
 import tkinter as tk
 import pickle
 from tkinter import ttk
@@ -273,8 +274,7 @@ def start_gui():
     notebook.pack(expand=True, fill="both")
     root.mainloop()
  
-
-def feed_pose_awesome(agent):
+def feed_pose_awesome(agent,i):
     quaternion = np.zeros(4)
     # estimated = agent.sensors.estimated_state.sense()
     measured = agent.sensors.groundtruth.sense()
@@ -287,45 +287,48 @@ def feed_pose_awesome(agent):
     not isnan(quaternion[3]):
         agent.scf.cf.extpos.send_extpose(measured['x'], measured['y'], measured['z'], quaternion[0], quaternion[1], quaternion[2], quaternion[3])
 
-        time_now=float(time.time())-time_start
-        t_values.append(time_now)
-        x_values.append(float(measured['x']))
-        y_values.append(float(measured['y']))
-        z_values.append(float(measured['z']))
+        if i % 30 == 0:
+            time_now=float(time.time())-time_start
+            t_values.append(time_now)
+            x_values.append(float(measured['x']))
+            y_values.append(float(measured['y']))
+            z_values.append(float(measured['z']))
 
-
-              
+        if i % 250 == 0:
+            plot()
+    # time_now=float(time.time())-time_start
+    # t_values.append(time_now)
+    # x_values.append(float(np.random.rand()))
+    # y_values.append(float(np.random.rand()))
+    # z_values.append(float(np.random.rand()))
+             
 def plot():
      # create the figure and subplots
     # plt.plot(time,x_values,color="blue")
-    axs[0].plot(t_values,x_values,color="blue")
     axs[1].plot(t_values,y_values,color="blue")
     axs[2].plot(t_values,z_values,color="blue")
+    axs[0].plot(t_values,x_values,color="blue")
     plt.xlim(0,30)
-    if t_values[-1] >= 30:
-         plt.xlim(t_values[-1]-30,t_values[-1])
-    plt.pause(0.3)
+    try:
+        if t_values[-1] >= 30:
+            plt.xlim(t_values[-1]-30,t_values[-1])
+    except:
+        pass
+    plt.pause(0.1)
+    
+
 
 def setup_agent(agent):
-	# add lighthouse sensor
 	sensors = {
-		# 'groundtruth': LHSensorCrazyflie(
-		#     agent,
-		#     get_calib_filename(),
-		#     _lighthouse_print_status_bool=PRINT_BOOL
-		# ),
-
 		'groundtruth': QualisysSensor(agent, rigid_body_id="uav31"),
 	}
-	# sensors['estimated_state'].initialize(agent)
 	agent.add_sensors(sensors)
 
 
 def connection_backgroud(agent):
-    # Initialize the low-level drivers
-    # setup_agent(agent)
+   
     sensors = {
-		'groundtruth': QualisysSensor(agent, rigid_body_id="blimp2"),
+		'groundtruth': QualisysSensor(agent, rigid_body_id="uav31"),
 	}
     agent.add_sensors(sensors)
     agent.takeoff()
@@ -336,10 +339,11 @@ def connection_backgroud(agent):
     time.sleep(0.1)
 
     # while True:
-    for _ in range(100000):
-        feed_pose_awesome(agent)
+    for i in range(100000):
+
+        feed_pose_awesome(agent,i)
         agent.scf.cf.commander.send_position_setpoint(0, 0, 1, 0)
-        
+
     print("hey")
     # for i in range(4000):
     #     feed_pose_awesome(agent,i)
@@ -412,8 +416,4 @@ if __name__ == '__main__':
     agent = CrazyflieRealAgent(uri=URI, cf_height=1, max_velocity=5, max_rate_yaw=10)
     gui_thread = threading.Thread(target=start_gui)
     gui_thread.start()
-    # connection_backgroud(agent)
-    # bg_thread = threading.Thread(target=connection_backgroud(agent))
-    # plot_thread = threading.Thread(target=plot)
-    # bg_thread.start()
-    # plot_thread.start()()
+    connection_backgroud(agent)
