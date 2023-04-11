@@ -29,25 +29,22 @@ from math import isnan
 import numpy as np
 import pickle
 import cflib.crtp
-from cflib.crazyflie import Crazyflie
-from cflib.crazyflie.syncCrazyflie import SyncCrazyflie
 from swarm_cf.sensor.qualisys import QualisysSensor
 from swarm_cf.agent import CrazyflieRealAgent
-from cflib.crazyflie.log import LogConfig
-from cflib.crazyflie.syncLogger import SyncLogger
 import threading
-import matplotlib.pyplot as plt
-import matplotlib.animation as animation
+from tkinter import ttk
 import tkinter as tk
 import pickle
-from tkinter import ttk
+from collections import deque
 
-t_values=[]
-x_values = []
-y_values = []
-z_values = []
-yaw_values=[]
-fig, axs = plt.subplots(3, 1, sharex=True)
+t_values = deque(maxlen = 100)
+x_values = deque(maxlen = 100)
+y_values = deque(maxlen = 100)
+z_values = deque(maxlen = 100)
+yaw_values = deque(maxlen = 100)
+
+
+
 time_start=float(time.time())
 # URI = uri_helper.uri_from_env(default='radio://0/80/2M/E7E7E7E7C7')
 URI = 'radio://0/80/2M/E7E7E7E7C7'
@@ -239,9 +236,9 @@ def start_gui():
         (ykp_text, "YKP:", value_ykp),
         (yawki_text, "YAWKI:", value_yawki),
         (yawkd_text, "YAWKD:", value_yawkd),
-        (zkd_text, "ZKP:", value_zkp),
-        (zkp_text, "YKD:", value_ykd),
-        (ykd_text, "ZKD:", value_zkd)
+        (zkp_text, "ZKP:", value_zkp),
+        (ykd_text, "YKD:", value_ykd),
+        (zkd_text, "ZKD:", value_zkd)
     ]
     for i, (variable, label, value) in enumerate(labels_and_vars1):
         tk.Label(tab1, text=label).grid(row=i // 3, column=(i%3) * 2,sticky="E")
@@ -259,9 +256,9 @@ def start_gui():
         (vykp_text, "VYKP:", value_vykp),
         (vyawki_text, "VYAWKI:", value_vyawki),
         (vyawkd_text,"VYAWKD:", value_vyawkd),
-        (vzkd_text, "VZKP:", value_vzkp),
-        (vzkp_text, "VYKD:", value_vykd),
-        (vykd_text, "VZKD:", value_vzkd)
+        (vzkp_text, "VZKP:", value_vzkp),
+        (vykd_text, "VYKD:", value_vykd),
+        (vzkd_text, "VZKD:", value_vzkd)
     ]
     for i, (variable, label, value) in enumerate(labels_and_vars2):
         tk.Label(tab2, text=label).grid(row=i // 3, column=(i % 3) * 2,sticky="E")
@@ -287,48 +284,22 @@ def feed_pose_awesome(agent,i):
     not isnan(quaternion[3]):
         agent.scf.cf.extpos.send_extpose(measured['x'], measured['y'], measured['z'], quaternion[0], quaternion[1], quaternion[2], quaternion[3])
 
-        if i % 30 == 0:
+        if i % 100 == 0:
             time_now=float(time.time())-time_start
             t_values.append(time_now)
             x_values.append(float(measured['x']))
             y_values.append(float(measured['y']))
             z_values.append(float(measured['z']))
+            yaw_values.append(float(measured['yaw']))
+            with open("Position.pkl", "wb") as f:
+                pickle.dump((t_values,x_values,y_values,z_values,yaw_values),f)    
 
-        if i % 250 == 0:
-            plot()
-    # time_now=float(time.time())-time_start
-    # t_values.append(time_now)
-    # x_values.append(float(np.random.rand()))
-    # y_values.append(float(np.random.rand()))
-    # z_values.append(float(np.random.rand()))
-             
-def plot():
-     # create the figure and subplots
-    # plt.plot(time,x_values,color="blue")
-    axs[1].plot(t_values,y_values,color="blue")
-    axs[2].plot(t_values,z_values,color="blue")
-    axs[0].plot(t_values,x_values,color="blue")
-    plt.xlim(0,30)
-    try:
-        if t_values[-1] >= 30:
-            plt.xlim(t_values[-1]-30,t_values[-1])
-    except:
-        pass
-    plt.pause(0.1)
-    
-
-
-def setup_agent(agent):
-	sensors = {
-		'groundtruth': QualisysSensor(agent, rigid_body_id="uav31"),
-	}
-	agent.add_sensors(sensors)
 
 
 def connection_backgroud(agent):
    
     sensors = {
-		'groundtruth': QualisysSensor(agent, rigid_body_id="uav31"),
+		'groundtruth': QualisysSensor(agent, rigid_body_id="blimp2"),
 	}
     agent.add_sensors(sensors)
     agent.takeoff()
@@ -338,78 +309,59 @@ def connection_backgroud(agent):
     agent.scf.cf.param.set_value('kalman.resetEstimation', '0')
     time.sleep(0.1)
 
+    size = 2
     # while True:
-    for i in range(100000):
-
-        feed_pose_awesome(agent,i)
-        agent.scf.cf.commander.send_position_setpoint(0, 0, 1, 0)
 
     print("hey")
-    # for i in range(4000):
-    #     feed_pose_awesome(agent,i)
-    #     agent.scf.cf.commander.send_position_setpoint(1, 0, 1, 0)
-    # print("ciao")
-    agent.land()
+    for i in range(100000):
+        feed_pose_awesome(agent,i)
+        agent.scf.cf.commander.send_position_setpoint(0, 0, 1, 0)
+        # time.sleep(0.1)
 
+    print("ciao")
+    # agent.land()
 
-    # with SyncCrazyflie(URI, cf=Crazyflie(rw_cache='./cache')) as scf:
-    #     cf = scf.cf
-
-    #     cf.param.set_value('kalman.resetEstimation', '1')
-    #     time.sleep(0.1)
-    #     cf.param.set_value('kalman.resetEstimation', '0')
-    #     time.sleep(2)
-
-    #     turning_time = 5
-    #     forward_time = 10
-    #     size = 2
-
-    #     print("takeoff")
-    #     while True:
-    #         for y in range(100):
-    #             cf.commander.send_position_setpoint(0, 0, 1, 0)
-    #             time.sleep(0.1)
-        # while True:
-        #     print("straight")
-        #     for y in range(forward_time*10):
-        #         cf.commander.send_position_setpoint(size, 0, 1, 0)
-        #         time.sleep(0.1)
-
-        #     print("turn")
-        #     for y in range(turning_time*10):
-        #         cf.commander.send_position_setpoint(size, 0, 1, -90)
-        #         time.sleep(0.1)
-
-        #     print("continue")
-        #     for y in range(forward_time*10):
-        #         cf.commander.send_position_setpoint(size, -size, 1, -90)
-        #         time.sleep(0.1)
-
-        #     print("turn")
-        #     for y in range(turning_time*10):
-        #         cf.commander.send_position_setpoint(size, -size, 1, -180)
-        #         time.sleep(0.1)
-
-        #     print("continue")
-        #     for y in range(forward_time*10):
-        #         cf.commander.send_position_setpoint(0, -size, 1, -180)
-        #         time.sleep(0.1)
-
-        #     print("turn")
-        #     for y in range(turning_time*10):
-        #         cf.commander.send_position_setpoint(0, -size, 1, -270)
-        #         time.sleep(0.1)
-
-        #     print("continue")
-        #     for y in range(forward_time*10):
-        #         cf.commander.send_position_setpoint(0, 0, 1, -270)
-        #         time.sleep(0.1)
-
-        #     print("turn")
-        #     for y in range(turning_time*10):
-        #         cf.commander.send_position_setpoint(0, 0, 1, 0)
-        #         time.sleep(0.1)
-
+    # while True:
+    #     print("straight")
+    #     for i in range(5000):
+    #         feed_pose_awesome(agent,i)
+    #         agent.scf.cf.commander.send_position_setpoint(size, 0, 1, 0)
+    #         # time.sleep(0.1)
+    #     print("turn")
+    #     for i in range(5000):
+    #         feed_pose_awesome(agent,i)
+    #         agent.scf.cf.commander.send_position_setpoint(size, 0, 1, -90)
+    #         # time.sleep(0.1)
+    #     print("continue")
+    #     for i in range(5000):
+    #         feed_pose_awesome(agent,i)
+    #         agent.scf.cf.commander.send_position_setpoint(size, -size, 1, -90)
+    #         # time.sleep(0.1)
+    #     print("turn")
+    #     for i in range(5000):
+    #         feed_pose_awesome(agent,i)
+    #         agent.scf.cf.commander.send_position_setpoint(size, -size, 1, -180)
+    #         # time.sleep(0.1)
+    #     print("continue")
+    #     for i in range(5000):
+    #         feed_pose_awesome(agent,i)
+    #         agent.scf.cf.commander.send_position_setpoint(0, -size, 1, -180)
+    #         # time.sleep(0.1)
+    #     print("turn")
+    #     for i in range(5000):
+    #         feed_pose_awesome(agent,i)
+    #         agent.scf.cf.commander.send_position_setpoint(0, -size, 1, -270)
+    #         # time.sleep(0.1)
+    #     print("continue")
+    #     for i in range(5000):
+    #         feed_pose_awesome(agent,i)
+    #         agent.scf.cf.commander.send_position_setpoint(0, 0, 1, -270)
+    #         # time.sleep(0.1)
+    #     print("turn")
+    #     for i in range(5000):
+    #         feed_pose_awesome(agent,i)
+    #         agent.scf.cf.commander.send_position_setpoint(0, 0, 1, 0)
+    #         # time.sleep(0.1)
 
 if __name__ == '__main__':
     cflib.crtp.init_drivers()    
